@@ -21,6 +21,7 @@ SUPPORTED_OS = {
   "flatcar-edge"        => {box: "flatcar-edge",               user: "core", box_url: FLATCAR_URL_TEMPLATE % ["edge"]},
   "ubuntu2004"          => {box: "generic/ubuntu2004",         user: "vagrant"},
   "ubuntu2204"          => {box: "generic/ubuntu2204",         user: "vagrant"},
+  "ubuntu2204-arm64"    => {box: "bento/ubuntu-22.04-arm64",   user: "vagrant"},
   "centos"              => {box: "centos/7",                   user: "vagrant"},
   "centos-bento"        => {box: "bento/centos-7.6",           user: "vagrant"},
   "centos8"             => {box: "centos/8",                   user: "vagrant"},
@@ -172,6 +173,13 @@ Vagrant.configure("2") do |config|
         end
       end
 
+      node.vm.provider :parallels do |prl|
+        prl.name = vm_name
+
+        prl.memory = $vm_memory
+        prl.cpus = $vm_cpus
+      end
+
       if $kube_node_instances_with_disks
         # Libvirt
         driverletters = ('a'..'z').to_a
@@ -219,7 +227,7 @@ Vagrant.configure("2") do |config|
       node.vm.provision "shell", inline: "swapoff -a"
 
       # ubuntu2004 and ubuntu2204 have IPv6 explicitly disabled. This undoes that.
-      if ["ubuntu2004", "ubuntu2204"].include? $os
+      if ["ubuntu2004", "ubuntu2204", "ubuntu2204-arm64"].include? $os
         node.vm.provision "shell", inline: "rm -f /etc/modprobe.d/local.conf"
         node.vm.provision "shell", inline: "sed -i '/net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.d/99-sysctl.conf /etc/sysctl.conf"
       end
